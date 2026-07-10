@@ -118,9 +118,6 @@ class PairingFragment : BaseFragment<DevicesListBinding>() {
                                 openAppDetailsSettings()
                             }
                         },
-                        onDuplicateNamesClick = {
-                            // TODO: Define action for duplicate names if needed
-                        },
                         onRefresh = { viewModel.onRefresh() }
                     )
                 }

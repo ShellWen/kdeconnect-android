@@ -58,7 +58,6 @@ fun PairingScreen(
     onClick: (String) -> Unit,
     onWifiSettingsClick: () -> Unit = {},
     onNotificationSettingsClick: () -> Unit = {},
-    onDuplicateNamesClick: () -> Unit = {},
     onRefresh: () -> Unit = {}
 ) {
     val lazyListState = rememberLazyListState()
@@ -71,7 +70,6 @@ fun PairingScreen(
         onClick = onClick,
         onWifiSettingsClick = onWifiSettingsClick,
         onNotificationSettingsClick = onNotificationSettingsClick,
-        onDuplicateNamesClick = onDuplicateNamesClick,
         onRefresh = onRefresh
     )
 }
@@ -84,7 +82,6 @@ private fun PairingScreenContent(
     onClick: (String) -> Unit,
     onWifiSettingsClick: () -> Unit,
     onNotificationSettingsClick: () -> Unit,
-    onDuplicateNamesClick: () -> Unit,
     onRefresh: () -> Unit = {}
 ) {
     PullToRefreshBox(
@@ -105,7 +102,6 @@ private fun PairingScreenContent(
                     uiState = uiState,
                     onWifiSettingsClick = onWifiSettingsClick,
                     onNotificationSettingsClick = onNotificationSettingsClick,
-                    onDuplicateNamesClick = onDuplicateNamesClick
                 )
             }
 
@@ -175,11 +171,10 @@ private fun PairingExplanations(
     uiState: PairingUiState,
     onWifiSettingsClick: () -> Unit,
     onNotificationSettingsClick: () -> Unit,
-    onDuplicateNamesClick: () -> Unit
 ) {
     Column {
         if (uiState.hasDuplicateNames) {
-            DuplicateNamesWarning(onClick = onDuplicateNamesClick)
+            DuplicateNamesWarning()
         }
 
         val someDevicesReachable = uiState.available.isNotEmpty() || uiState.connected.isNotEmpty()
@@ -211,7 +206,8 @@ private fun PairingExplanations(
 
 @Composable
 fun PairingExplanationRow(
-    text: String, icon: Int? = null,
+    text: String,
+    icon: Int? = null,
     onClick: (() -> Unit)? = null
 ) {
     Row(
@@ -237,13 +233,10 @@ fun PairingExplanationRow(
 }
 
 @Composable
-fun DuplicateNamesWarning(
-    onClick: () -> Unit
-) {
+fun DuplicateNamesWarning() {
     PairingExplanationRow(
         text = stringResource(id = R.string.pairing_duplicate_names),
         icon = R.drawable.ic_warning,
-        onClick = onClick
     )
 }
 
@@ -348,7 +341,6 @@ private fun PreviewCompose() {
             onClick = { /* Do nothing */ },
             onWifiSettingsClick = { /* Do nothing */ },
             onNotificationSettingsClick = { /* Do nothing */ },
-            onDuplicateNamesClick = { /* Do nothing */ },
             onRefresh = { /* Do nothing */ }
         )
     }
