@@ -62,27 +62,26 @@ class KdeConnect : Application() {
         loadRememberedDevicesFromSettings()
 
         if (BuildConfig.DEBUG && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            StrictMode.setVmPolicy(
-                VmPolicy.Builder(StrictMode.getVmPolicy())
-                    .detectActivityLeaks()
-                    .detectLeakedClosableObjects()
-                    .detectLeakedRegistrationObjects()
-                    .detectFileUriExposure()
-                    .detectContentUriWithoutPermission()
-                    .detectCredentialProtectedWhileLocked()
-                    .detectIncorrectContextUse()
-                    .detectUnsafeIntentLaunch()
-                    //.detectBlockedBackgroundActivityLaunch()
-                    .penaltyLog()
-                    .build()
-            )
-            StrictMode.setThreadPolicy(
-                ThreadPolicy.Builder(StrictMode.getThreadPolicy())
-                    .detectUnbufferedIo()
-                    .detectResourceMismatches()
-                    .penaltyLog()
-                    .build()
-            )
+            val vmPolicyBuilder = VmPolicy.Builder(StrictMode.getVmPolicy())
+                .detectActivityLeaks()
+                .detectLeakedClosableObjects()
+                .detectLeakedRegistrationObjects()
+                .detectFileUriExposure()
+                .detectContentUriWithoutPermission()
+                .detectCredentialProtectedWhileLocked()
+                .detectIncorrectContextUse()
+                .detectUnsafeIntentLaunch()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA) {
+                vmPolicyBuilder.detectBlockedBackgroundActivityLaunch()
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CINNAMON_BUN) {
+                vmPolicyBuilder.detectImplicitUriPermissionGrant()
+            }
+            val threadPolicyBuilder = ThreadPolicy.Builder(StrictMode.getThreadPolicy())
+                .detectUnbufferedIo()
+                .detectResourceMismatches()
+            StrictMode.setVmPolicy(vmPolicyBuilder.penaltyLog().build())
+            StrictMode.setThreadPolicy(threadPolicyBuilder.penaltyLog().build())
         }
     }
 
