@@ -7,6 +7,7 @@ package org.kde.kdeconnect.ui
 
 import android.Manifest
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -37,6 +38,7 @@ import org.kde.kdeconnect.ui.compose.screen.pairing.PairingScreen
 import org.kde.kdeconnect.ui.compose.screen.pairing.PairingViewModel
 import org.kde.kdeconnect_tp.R
 import org.kde.kdeconnect_tp.databinding.DevicesListBinding
+import androidx.core.content.edit
 
 /**
  * The view that the user will see when there are no devices paired, or when you choose "add a new device" from the sidebar.
@@ -91,6 +93,21 @@ class PairingFragment : BaseFragment<DevicesListBinding>() {
         createComposeView()
     }
 
+    fun hasRequestedNotificationPermission(): Boolean {
+        return context
+            ?.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            ?.getBoolean(KEY_REQUESTED_NOTIFICATIONS, false)
+            ?: false
+    }
+
+    fun markNotificationPermissionRequested() {
+        context
+            ?.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            ?.edit {
+                putBoolean(KEY_REQUESTED_NOTIFICATIONS, true)
+            }
+    }
+
     private fun createComposeView() {
         binding.composeView.apply {
             setContent {
@@ -109,11 +126,18 @@ class PairingFragment : BaseFragment<DevicesListBinding>() {
                         },
                         onNotificationSettingsClick = {
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                ActivityCompat.requestPermissions(
-                                    requireActivity(),
-                                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-                                    MainActivity.RESULT_NOTIFICATIONS_ENABLED
-                                )
+                                val hasRequestedBefore = hasRequestedNotificationPermission()
+                                val shouldShowRationale = ActivityCompat.shouldShowRequestPermissionRationale(mActivity!!, Manifest.permission.POST_NOTIFICATIONS)
+                                if (hasRequestedBefore && !shouldShowRationale) {
+                                    openAppDetailsSettings()
+                                } else {
+                                    markNotificationPermissionRequested()
+                                    ActivityCompat.requestPermissions(
+                                        requireActivity(),
+                                        arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                                        MainActivity.RESULT_NOTIFICATIONS_ENABLED
+                                    )
+                                }
                             } else {
                                 openAppDetailsSettings()
                             }
@@ -227,5 +251,8 @@ class PairingFragment : BaseFragment<DevicesListBinding>() {
 
     companion object {
         private const val RESULT_PAIRING_SUCCESFUL = Activity.RESULT_FIRST_USER
+
+        private const val PREFS_NAME = "permission_prefs"
+        private const val KEY_REQUESTED_NOTIFICATIONS = "requested_notifications_permission"
     }
 }
