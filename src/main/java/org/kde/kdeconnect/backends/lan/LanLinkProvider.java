@@ -87,7 +87,7 @@ public class LanLinkProvider extends BaseLinkProvider {
     private long lastBroadcast = 0;
     private final static long delayBetweenBroadcasts = 200;
 
-    private boolean listening = false;
+    private boolean isStopped = true;
 
     public void onConnectionLost(BaseLink link) {
         String deviceId = link.getDeviceId();
@@ -396,6 +396,9 @@ public class LanLinkProvider extends BaseLinkProvider {
     }
 
     private void setupUdpListener() {
+        if (udpServer != null) {
+            return;
+        }
         try {
             udpServer = new DatagramSocket(null);
             udpServer.setReuseAddress(true);
@@ -412,7 +415,7 @@ public class LanLinkProvider extends BaseLinkProvider {
         }
         ThreadHelper.execute(() -> {
             Log.i("UdpListener", "Starting UDP listener");
-            while (listening) {
+            while (!isStopped) {
                 try {
                     DatagramPacket packet = new DatagramPacket(new byte[MAX_UDP_PACKET_SIZE], MAX_UDP_PACKET_SIZE);
                     udpServer.receive(packet);
@@ -433,6 +436,9 @@ public class LanLinkProvider extends BaseLinkProvider {
     }
 
     private void setupTcpListener() {
+        if (tcpServer != null) {
+            return;
+        }
         try {
             tcpServer = openServerSocketOnFreePort(MIN_PORT);
         } catch (IOException e) {
@@ -440,7 +446,7 @@ public class LanLinkProvider extends BaseLinkProvider {
             throw new RuntimeException(e);
         }
         ThreadHelper.execute(() -> {
-            while (listening) {
+            while (!isStopped) {
                 try {
                     Socket socket = tcpServer.accept();
                     configureSocket(socket);
@@ -561,34 +567,32 @@ public class LanLinkProvider extends BaseLinkProvider {
     @Override
     public void onStart() {
         //Log.i("KDE/LanLinkProvider", "onStart");
-        if (!listening) {
-            listening = true;
+        isStopped = false;
 
-            setupUdpListener();
-            setupTcpListener();
+        setupUdpListener();
+        setupTcpListener();
 
-            synchronized (mdnsDiscovery) {
-                mdnsDiscovery.startDiscovering();
-                if (TrustedNetworkHelper.isTrustedNetwork(context)) {
-                    mdnsDiscovery.startAnnouncing();
-                }
+        synchronized (mdnsDiscovery) {
+            mdnsDiscovery.startDiscovering();
+            if (TrustedNetworkHelper.isTrustedNetwork(context)) {
+                mdnsDiscovery.startAnnouncing();
             }
-
-            broadcastUdpIdentityPacket(null);
         }
+
+        broadcastUdpIdentityPacket(null);
     }
 
     @Override
     public void onNetworkChange(@Nullable Network network) {
+        if (isStopped) return;
         if (System.currentTimeMillis() < lastBroadcast + delayBetweenBroadcasts) {
             Log.i("LanLinkProvider", "onNetworkChange: relax cowboy");
             return;
         }
         lastBroadcast = System.currentTimeMillis();
 
-        if (udpServer == null) {
-            setupUdpListener();
-        }
+        setupUdpListener();
+        setupTcpListener();
 
         broadcastUdpIdentityPacket(network);
         synchronized (mdnsDiscovery) {
@@ -605,7 +609,7 @@ public class LanLinkProvider extends BaseLinkProvider {
     @Override
     public void onStop() {
         //Log.i("KDE/LanLinkProvider", "onStop");
-        listening = false;
+        isStopped = true;
         synchronized (mdnsDiscovery) {
             mdnsDiscovery.stopAnnouncing();
             mdnsDiscovery.stopDiscovering();
