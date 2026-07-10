@@ -9,7 +9,6 @@ import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -20,6 +19,7 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.getValue
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -149,16 +149,18 @@ class PairingFragment : BaseFragment<DevicesListBinding>() {
         }
     }
 
-    private fun openAppDetailsSettings() {
-        val intent = Intent().apply {
-            action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-            data = Uri.fromParts(
-                "package",
-                requireContext().packageName,
-                null
-            )
+
+    private val appSettingsLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            updatePermissionsHeader()
         }
-        startActivity(intent)
+
+    private fun openAppDetailsSettings() {
+        val intent = Intent(
+            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+            Uri.fromParts("package", requireContext().packageName, null)
+        )
+        appSettingsLauncher.launch(intent)
     }
 
     private fun updateDeviceList() {
@@ -186,12 +188,14 @@ class PairingFragment : BaseFragment<DevicesListBinding>() {
             )
         }
 
+        updatePermissionsHeader()
+
         try {
             val allDevices = KdeConnect.getInstance().devices.values.filter {
                 it.isReachable || it.isPaired
             }
 
-            viewModel.buildUiState(devices = allDevices)
+            viewModel.updateDevices(devices = allDevices)
         } catch (_: IllegalStateException) {
             // Ignore: The activity was closed while we were trying to update it
         } finally {
@@ -200,20 +204,18 @@ class PairingFragment : BaseFragment<DevicesListBinding>() {
     }
 
     private fun updateConnectivityInfoHeader(isConnectedToNonCellularNetwork: Boolean) {
-        val hasNotificationsPermission =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                ContextCompat.checkSelfPermission(
-                    requireContext(),
-                    Manifest.permission.POST_NOTIFICATIONS
-                ) == PackageManager.PERMISSION_GRANTED
-            } else {
-                true
-            }
-
         viewModel.updateConnectivity(
             isWifiAvailable = isConnectedToNonCellularNetwork,
-            hasNotificationsPermission = hasNotificationsPermission,
             isTrustedNetwork = isTrustedNetwork(requireContext())
+        )
+    }
+
+    private fun updatePermissionsHeader() {
+        val hasNotificationsPermission = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU
+                || ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.POST_NOTIFICATIONS) == PERMISSION_GRANTED
+
+        viewModel.updatePermissions(
+            hasNotificationsPermission = hasNotificationsPermission,
         )
     }
 

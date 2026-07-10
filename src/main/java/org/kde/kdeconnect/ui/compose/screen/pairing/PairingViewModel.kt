@@ -43,19 +43,27 @@ class PairingViewModel(application: Application) : AndroidViewModel(application)
 
     fun updateConnectivity(
         isWifiAvailable: Boolean,
-        hasNotificationsPermission: Boolean,
         isTrustedNetwork: Boolean
     ) {
         _pairingUiState.update {
             it.copy(
                 isWifiAvailable = isWifiAvailable,
-                hasNotificationsPermission = hasNotificationsPermission,
                 isTrustedNetwork = isTrustedNetwork
             )
         }
     }
 
-    fun buildUiState(devices: Collection<Device>) =
+    fun updatePermissions(
+        hasNotificationsPermission: Boolean,
+    ) {
+        _pairingUiState.update {
+            it.copy(
+                hasNotificationsPermission = hasNotificationsPermission,
+            )
+        }
+    }
+
+    fun updateDevices(devices: Collection<Device>) =
         viewModelScope.launch(context = Dispatchers.Default) {
             val deviceList = devices.toList()
             this@PairingViewModel.allDevices = deviceList
