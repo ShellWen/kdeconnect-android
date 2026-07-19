@@ -453,6 +453,7 @@
   <string name="findmyphone_notifications_explanation">Varslingsløyvet trengst for at telefonen skal kunna ringja når appen er i bakgrunnsmodus</string>
   <string name="findmyphone_camera_explanation">Kameraløyvet gjer det mogleg å blinka med lommelykta for å finna telefonen</string>
   <string name="findmyphone_open_settings_for_camera">Gje kameraløyve i appinnstillingane for å kunna bruka lommelykta</string>
+  <string name="no_notifications">Varslingar er slåtte av, så du vil ikkje få varsling om parings­førespurnadar.</string>
   <string name="mpris_keepwatching">Hald fram avspeling</string>
   <string name="mpris_keepwatching_settings_title">Hald fram avspeling</string>
   <string name="mpris_keepwatching_settings_summary">Vis ei stille varsling om framhald av medie­avspeling på eininga etter avspelingsstopp</string>
@@ -462,6 +463,7 @@
   <string name="ping_in_progress">Pingar …</string>
   <string name="device_host_invalid">Ugyldig vert. Bruk eit gyldig vertsnamn, IPv4 eller IPv6.</string>
   <string name="device_host_duplicate">Verten finst i lista frå før</string>
+  <string name="enable_fullscreen">Bruk fullskjerm</string>
   <string name="pref_presenter_enable_volume_keys_title">Bruk lydstyrke-knappane for å byta lysbilete</string>
   <string name="pref_presenter_sensitivity_title">Peikarfølsemd</string>
   <string name="pref_presenter_enable_volume_keys_summary">Bruk i standby-modus er ikkje støtta på Android versjon 13–15</string>
